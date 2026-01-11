@@ -1,0 +1,23 @@
+/Users/sector7gp/Library/CloudStorage/GoogleDrive-sector7gp@gmail.com/My Drive/Codigo/Arduino/LightHouse/LightHouse.ino: In function 'void applyTemperature()':
+/Users/sector7gp/Library/CloudStorage/GoogleDrive-sector7gp@gmail.com/My Drive/Codigo/Arduino/LightHouse/LightHouse.ino:101:13: error: 'struct CRGB' has no member named 'setTemperature'
+  101 |   colorCold.setTemperature(OvercastSky);
+      |             ^~~~~~~~~~~~~~
+/Users/sector7gp/Library/CloudStorage/GoogleDrive-sector7gp@gmail.com/My Drive/Codigo/Arduino/LightHouse/LightHouse.ino:103:13: error: 'struct CRGB' has no member named 'setTemperature'
+  103 |   colorWarm.setTemperature(Tungsten40W);
+      |             ^~~~~~~~~~~~~~
+
+[92mUsed library[0m    [92mVersion[0m [90mPath[0m
+[93mFastLED[0m         3.10.3  [90m/Users/sector7gp/Documents/Arduino/libraries/FastLED[0m
+[93mWebServer[0m       3.3.5   [90m/Users/sector7gp/Library/Arduino15/packages/esp32/hardware/esp32/3.3.5/libraries/WebServer[0m
+[93mFS[0m              3.3.5   [90m/Users/sector7gp/Library/Arduino15/packages/esp32/hardware/esp32/3.3.5/libraries/FS[0m
+[93mNetworking[0m      3.3.5   [90m/Users/sector7gp/Library/Arduino15/packages/esp32/hardware/esp32/3.3.5/libraries/Network[0m
+[93mWiFiManager[0m     2.0.17  [90m/Users/sector7gp/Documents/Arduino/libraries/WiFiManager[0m
+[93mWiFi[0m            3.3.5   [90m/Users/sector7gp/Library/Arduino15/packages/esp32/hardware/esp32/3.3.5/libraries/WiFi[0m
+[93mUpdate[0m          3.3.5   [90m/Users/sector7gp/Library/Arduino15/packages/esp32/hardware/esp32/3.3.5/libraries/Update[0m
+[93mDNSServer[0m       3.3.5   [90m/Users/sector7gp/Library/Arduino15/packages/esp32/hardware/esp32/3.3.5/libraries/DNSServer[0m
+[93mESP32 Async UDP[0m 3.3.5   [90m/Users/sector7gp/Library/Arduino15/packages/esp32/hardware/esp32/3.3.5/libraries/AsyncUDP[0m
+[93mHash[0m            3.3.5   [90m/Users/sector7gp/Library/Arduino15/packages/esp32/hardware/esp32/3.3.5/libraries/Hash[0m
+
+[92mUsed platform[0m [92mVersion[0m [90mPath[0m
+[93mesp32:esp32[0m   3.3.5   [90m/Users/sector7gp/Library/Arduino15/packages/esp32/hardware/esp32/3.3.5[0m
+Error during build: exit status 1
