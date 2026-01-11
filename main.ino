@@ -7,39 +7,39 @@
 
 CRGB leds[NUM_LEDS];
 
-#define ROTATION_TIME 4000 // 1 vuelta cada 12 s
+#define ROTATION_TIME 4000 // 1 rotation every 12 s
 
-/* Parámetros ópticos
-La cantidad mínima de luz que siempre está encendida, aun cuando no pasa ni un
-foco de luz ni la sombra. 40–80 → faro realista, industrial 120–180 →
-decorativo, suave 0 → searchlight puro (solo haz)
+/* Optical parameters
+The minimum amount of light that is always on, even when neither a light focus
+nor the shadow passes. 40–80 → realistic, industrial lighthouse 120–180 →
+decorative, soft 0 → pure searchlight (beam only)
 */
 #define BASE_BRIGHTNESS 0
 
-/*Cuánto refuerza el brillo cada foco de luz cuando pasa por un LED.
-80–120 → suave / realista
-150–220 → foco potente
->230 → efecto show
+/* How much each light focus boosts brightness when passing an LED.
+80–120 → soft / realistic
+150–220 → powerful focus
+>230 → show effect
 */
 #define LIGHT_PEAK 200
 
-/*Cuánto se resta de brillo cuando pasa el obturador (sombra).
-120–160 → sombra leve
-180–220 → obturador real
->230 → blackout total
+/* How much brightness is subtracted when the shutter (shadow) passes.
+120–160 → slight shadow
+180–220 → real shutter
+>230 → total blackout
 */
 #define SHADOW_DEPTH 200
 
-/*El ancho angular del foco o de la sombra, expresado como fracción de vuelta:
-0.06  corte brutal
-0.10  faro clásico
-0.15  realista
-0.20  decorativo
->0.25 difuso
+/* The angular width of the focus or shadow, expressed as a fraction of a turn:
+0.06  brutal cut
+0.10  classic lighthouse
+0.15  realistic
+0.20  decorative
+>0.25 diffuse
 */
 #define FOCUS_WIDTH 0.20
 
-#define LIGHT_MODE true // true = se mueve la luz, false = se mueve la sombra
+#define LIGHT_MODE true // true = light moves, false = shadow moves
 
 float circDist(float a, float b) {
   float d = fabs(a - b);
@@ -73,7 +73,7 @@ void loop() {
     float lightSum = 0.0;
     float shadowVal = 0.0;
 
-    // 3 focos de luz
+    // 3 light focuses
     for (uint8_t f = 0; f < 3; f++) {
       float focusPos = f * 0.25 + rot;
       if (focusPos >= 1.0)
@@ -83,34 +83,34 @@ void loop() {
       lightSum += gaussian(d, FOCUS_WIDTH);
     }
 
-    // foco de sombra
+    // shadow focus
     float shadowPos = 0.75 + rot;
     if (shadowPos >= 1.0)
       shadowPos -= 1.0;
 
     shadowVal = gaussian(circDist(ledPos, shadowPos), FOCUS_WIDTH * 1.3);
 
-    // dentro del loop(), reemplazá SOLO el bloque de brightness por este
+    // inside loop(), replace ONLY the brightness block with this one
 
     float brightness;
 
     if (!LIGHT_MODE) {
-      // ===== SOMBRA GIRATORIA (como ya te gusta) =====
+      // ===== ROTATING SHADOW (as you already like) =====
       brightness =
           BASE_BRIGHTNESS + lightSum * LIGHT_PEAK - shadowVal * SHADOW_DEPTH;
 
     } else {
-      // ===== LUZ GIRATORIA REAL =====
+      // ===== REAL ROTATING LIGHT =====
 
-      // haz principal (solo uno)
+      // main beam (only one)
       float mainBeam = gaussian(circDist(ledPos, rot), FOCUS_WIDTH * 0.7);
 
-      // focos secundarios (muy suaves)
+      // secondary focuses (very soft)
       float secondary = lightSum * 0.25;
 
-      brightness = mainBeam * 255 + // haz dominante
-                   secondary * 60 - // relleno leve
-                   shadowVal * 40;  // sombra casi pasiva
+      brightness = mainBeam * 255 + // dominant beam
+                   secondary * 60 - // slight fill
+                   shadowVal * 40;  // almost passive shadow
     }
 
     brightness = constrain(brightness, 0, 255);
