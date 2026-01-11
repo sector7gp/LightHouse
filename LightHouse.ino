@@ -1,3 +1,4 @@
+#include <ESPmDNS.h>
 #include <FastLED.h>
 #include <WebServer.h>
 #include <WiFiManager.h>
@@ -27,58 +28,59 @@ const char *htmlPage = R"rawliteral(
 <!DOCTYPE html><html>
 <head><meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body { font-family: Arial; text-align: center; margin-top: 20px; background-color: #222; color: white; }
-h2 { color: #f39c12; }
-.slidecontainer { width: 100%; margin-bottom: 20px; }
-.slider { -webkit-appearance: none; width: 80%; height: 15px; background: #555; outline: none; opacity: 0.8; border-radius: 8px; }
+body { font-family: Arial; text-align: center; margin: 0; padding: 10px; background-color: #222; color: white; }
+h3 { color: #f39c12; margin: 10px 0; }
+.control-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 5px; background: #333; border-radius: 8px; }
+.label { font-size: 0.9rem; margin: 0; min-width: 80px; text-align: left; }
+.slider-container { flex-grow: 1; margin: 0 10px; }
+.slider { -webkit-appearance: none; width: 100%; height: 10px; background: #555; outline: none; opacity: 0.8; border-radius: 5px; }
 .slider:hover { opacity: 1; }
-.slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 25px; height: 25px; background: #f39c12; cursor: pointer; border-radius: 50%; }
-.label { font-size: 1.2rem; }
-.val { color: #aaa; font-size: 0.9rem; }
+.slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #f39c12; cursor: pointer; border-radius: 50%; }
+.val { color: #ccc; font-size: 0.9rem; min-width: 40px; text-align: right; }
+input[type=checkbox] { transform: scale(1.5); }
 </style></head>
 <body>
-  <h2>Lighthouse Control</h2>
+  <h3>Lighthouse</h3>
 
-  <div class="slidecontainer">
+  <div class="control-row">
     <p class="label">Warmth</p>
-    <input type="range" min="0" max="100" value="%WARMTH%" class="slider" oninput="update('warmth', this.value)">
+    <div class="slider-container"><input type="range" min="0" max="100" value="%WARMTH%" class="slider" oninput="update('warmth', this.value)"></div>
     <p class="val" id="warmth_val">%WARMTH%</p>
   </div>
 
-  <div class="slidecontainer">
-    <p class="label">Rotation Time (ms)</p>
-    <input type="range" min="1000" max="10000" value="%ROT%" class="slider" oninput="update('rot', this.value)">
-    <p class="val" id="rot_val">%ROT%</p>
+  <div class="control-row">
+    <p class="label">Time (s)</p>
+    <div class="slider-container"><input type="range" min="1000" max="10000" value="%ROT%" class="slider" oninput="update('rot', this.value)"></div>
+    <p class="val" id="rot_val">%ROT_DISP%</p>
   </div>
 
-  <div class="slidecontainer">
-    <p class="label">Base Brightness</p>
-    <input type="range" min="0" max="255" value="%BASE%" class="slider" oninput="update('base', this.value)">
+  <div class="control-row">
+    <p class="label">Bright</p>
+    <div class="slider-container"><input type="range" min="0" max="255" value="%BASE%" class="slider" oninput="update('base', this.value)"></div>
     <p class="val" id="base_val">%BASE%</p>
   </div>
 
-  <div class="slidecontainer">
-    <p class="label">Light Peak</p>
-    <input type="range" min="80" max="255" value="%PEAK%" class="slider" oninput="update('peak', this.value)">
+  <div class="control-row">
+    <p class="label">Peak</p>
+    <div class="slider-container"><input type="range" min="80" max="255" value="%PEAK%" class="slider" oninput="update('peak', this.value)"></div>
     <p class="val" id="peak_val">%PEAK%</p>
   </div>
 
-  <div class="slidecontainer">
-    <p class="label">Shadow Depth</p>
-    <input type="range" min="100" max="235" value="%SHADOW%" class="slider" oninput="update('shadow', this.value)">
+  <div class="control-row">
+    <p class="label">Shadow</p>
+    <div class="slider-container"><input type="range" min="100" max="235" value="%SHADOW%" class="slider" oninput="update('shadow', this.value)"></div>
     <p class="val" id="shadow_val">%SHADOW%</p>
   </div>
 
-  <div class="slidecontainer">
-    <p class="label">Focus Width</p>
-    <input type="range" min="6" max="25" value="%FOCUS%" class="slider" oninput="update('focus', this.value)">
+  <div class="control-row">
+    <p class="label">Focus</p>
+    <div class="slider-container"><input type="range" min="6" max="25" value="%FOCUS%" class="slider" oninput="update('focus', this.value)"></div>
     <p class="val" id="focus_val">%FOCUS_DISP%</p>
   </div>
 
-  <div class="slidecontainer">
-    <p class="label">Light Mode</p>
+  <div class="control-row" style="justify-content: center;">
+    <label for="mode_box" style="margin-right: 10px;">Luz / Sombra</label>
     <input type="checkbox" id="mode_box" onchange="update('mode', this.checked ? 1 : 0)" %CHECKED%>
-    <label for="mode_box">Luz / Sombra</label>
   </div>
 
 <script>
@@ -86,6 +88,8 @@ function update(name, val) {
   if (name !== 'mode') {
       if (name === 'focus') {
           document.getElementById(name + "_val").innerHTML = (val / 100.0).toFixed(2);
+      } else if (name === 'rot') {
+          document.getElementById(name + "_val").innerHTML = (val / 1000.0).toFixed(1);
       } else {
           document.getElementById(name + "_val").innerHTML = val;
       }
@@ -102,6 +106,7 @@ void handleRoot() {
   String page = htmlPage;
   page.replace("%WARMTH%", String(warmthValue));
   page.replace("%ROT%", String(rotationTime));
+  page.replace("%ROT_DISP%", String(rotationTime / 1000.0, 1));
   page.replace("%BASE%", String(baseBrightness));
   page.replace("%PEAK%", String(lightPeak));
   page.replace("%SHADOW%", String(shadowDepth));
@@ -166,9 +171,13 @@ void setup() {
   WiFiManager wifiManager;
   // Make sure to set a timeout so it doesn't block forever if you want it to
   // run without wifi eventually, but for a portal we usually want it to block
-  // or autoConnect. autoConnect will try to connect to saved wifi, or create AP
-  // "LightHouseAP" if failed.
+  // or autoConnect.  // autoConnect will try to connect to saved wifi, or
+  // create AP "LightHouseAP" if failed.
   wifiManager.autoConnect("LightHouseAP");
+
+  if (MDNS.begin("faro")) {
+    MDNS.addService("http", "tcp", 80);
+  }
 
   // Web Server
   server.on("/", handleRoot);
