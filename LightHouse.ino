@@ -9,43 +9,89 @@
 
 CRGB leds[NUM_LEDS];
 
-#define ROTATION_TIME 4000 // 1 rotation every 12 s
+int rotationTime = 4000; // 1 rotation every 12 s
 
 /* Optical parameters */
-#define BASE_BRIGHTNESS 0
-#define LIGHT_PEAK 200
-#define SHADOW_DEPTH 200
-#define FOCUS_WIDTH 0.20
-#define LIGHT_MODE true
+int baseBrightness = 0;
+int lightPeak = 200;
+int shadowDepth = 200;
+float focusWidth = 0.20;
+bool lightMode = true;
 
 // Web Server and Control Variables
 WebServer server(80);
 int warmthValue = 50; // 0 (Cold) to 100 (Warm)
 
-// HTML Page with Slider
+// HTML Page with Sliders for all parameters
 const char *htmlPage = R"rawliteral(
 <!DOCTYPE html><html>
 <head><meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body { font-family: Arial; text-align: center; margin-top: 50px; background-color: #222; color: white; }
+body { font-family: Arial; text-align: center; margin-top: 20px; background-color: #222; color: white; }
 h2 { color: #f39c12; }
-.slidecontainer { width: 100%; }
-.slider { -webkit-appearance: none; width: 80%; height: 25px; background: linear-gradient(90deg, #aaddff 0%, #ffaa33 100%); outline: none; opacity: 0.9; border-radius: 12px; }
+.slidecontainer { width: 100%; margin-bottom: 20px; }
+.slider { -webkit-appearance: none; width: 80%; height: 15px; background: #555; outline: none; opacity: 0.8; border-radius: 8px; }
 .slider:hover { opacity: 1; }
-.slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 35px; height: 35px; background: #fff; cursor: pointer; border-radius: 50%; }
+.slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 25px; height: 25px; background: #f39c12; cursor: pointer; border-radius: 50%; }
+.label { font-size: 1.2rem; }
+.val { color: #aaa; font-size: 0.9rem; }
 </style></head>
 <body>
   <h2>Lighthouse Control</h2>
-  <p>Warmth Control</p>
+
   <div class="slidecontainer">
-    <input type="range" min="0" max="100" value="%VALUE%" class="slider" id="myRange" oninput="updateVal(this.value)">
+    <p class="label">Warmth</p>
+    <input type="range" min="0" max="100" value="%WARMTH%" class="slider" oninput="update('warmth', this.value)">
+    <p class="val" id="warmth_val">%WARMTH%</p>
   </div>
-  <p>Value: <span id="demo">%VALUE%</span></p>
+
+  <div class="slidecontainer">
+    <p class="label">Rotation Time (ms)</p>
+    <input type="range" min="1000" max="10000" value="%ROT%" class="slider" oninput="update('rot', this.value)">
+    <p class="val" id="rot_val">%ROT%</p>
+  </div>
+
+  <div class="slidecontainer">
+    <p class="label">Base Brightness</p>
+    <input type="range" min="0" max="255" value="%BASE%" class="slider" oninput="update('base', this.value)">
+    <p class="val" id="base_val">%BASE%</p>
+  </div>
+
+  <div class="slidecontainer">
+    <p class="label">Light Peak</p>
+    <input type="range" min="80" max="255" value="%PEAK%" class="slider" oninput="update('peak', this.value)">
+    <p class="val" id="peak_val">%PEAK%</p>
+  </div>
+
+  <div class="slidecontainer">
+    <p class="label">Shadow Depth</p>
+    <input type="range" min="100" max="235" value="%SHADOW%" class="slider" oninput="update('shadow', this.value)">
+    <p class="val" id="shadow_val">%SHADOW%</p>
+  </div>
+
+  <div class="slidecontainer">
+    <p class="label">Focus Width</p>
+    <input type="range" min="6" max="25" value="%FOCUS%" class="slider" oninput="update('focus', this.value)">
+    <p class="val" id="focus_val">%FOCUS_DISP%</p>
+  </div>
+
+  <div class="slidecontainer">
+    <p class="label">Light Mode</p>
+    <input type="checkbox" id="mode_box" onchange="update('mode', this.checked ? 1 : 0)" %CHECKED%>
+    <label for="mode_box">Luz / Sombra</label>
+  </div>
+
 <script>
-function updateVal(val) {
-  document.getElementById("demo").innerHTML = val;
+function update(name, val) {
+  if (name !== 'mode') {
+      if (name === 'focus') {
+          document.getElementById(name + "_val").innerHTML = (val / 100.0).toFixed(2);
+      } else {
+          document.getElementById(name + "_val").innerHTML = val;
+      }
+  }
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", "/set?val=" + val, true);
+  xhr.open("GET", "/set?" + name + "=" + val, true);
   xhr.send();
 }
 </script>
@@ -54,18 +100,34 @@ function updateVal(val) {
 
 void handleRoot() {
   String page = htmlPage;
-  page.replace("%VALUE%", String(warmthValue));
+  page.replace("%WARMTH%", String(warmthValue));
+  page.replace("%ROT%", String(rotationTime));
+  page.replace("%BASE%", String(baseBrightness));
+  page.replace("%PEAK%", String(lightPeak));
+  page.replace("%SHADOW%", String(shadowDepth));
+  page.replace("%FOCUS%",
+               String((int)(focusWidth * 100))); // Display as integer 6-25
+  page.replace("%FOCUS_DISP%", String(focusWidth));
+  page.replace("%CHECKED%", lightMode ? "checked" : "");
   server.send(200, "text/html", page);
 }
 
 void handleSet() {
-  if (server.hasArg("val")) {
-    warmthValue = server.arg("val").toInt();
-    if (warmthValue < 0)
-      warmthValue = 0;
-    if (warmthValue > 100)
-      warmthValue = 100;
-  }
+  if (server.hasArg("warmth"))
+    warmthValue = server.arg("warmth").toInt();
+  if (server.hasArg("rot"))
+    rotationTime = server.arg("rot").toInt();
+  if (server.hasArg("base"))
+    baseBrightness = server.arg("base").toInt();
+  if (server.hasArg("peak"))
+    lightPeak = server.arg("peak").toInt();
+  if (server.hasArg("shadow"))
+    shadowDepth = server.arg("shadow").toInt();
+  if (server.hasArg("focus"))
+    focusWidth = server.arg("focus").toInt() / 100.0;
+  if (server.hasArg("mode"))
+    lightMode = (server.arg("mode").toInt() == 1);
+
   server.send(200, "text/plain", "OK");
 }
 
@@ -83,22 +145,11 @@ float gaussian(float d, float w) {
 
 // Map 0-100 to color temperature
 void applyTemperature() {
-  // 0 = CarbonArc (Cold/Blueish), 100 = Tungsten100W (Warm/Orange)
-  // We can also use raw kelvin values.
-  // CarbonArc ~ 5200K (Clean White), Tungsten100W ~ 2850K (Warm)
-  // OvercastSky ~ 6500K (Cold)
-
-  // Let's mix between OvercastSky (Cold) and Tungsten40W (Very Warm)
-  uint32_t cold = OvercastSky; // 0
-  uint32_t warm = Tungsten40W; // 100
-
-  // FastLED doesn't have a direct lerp for ColorTemperature enum constants
-  // easily accessible as simple integers in a linear way slightly. But
-  // setTemperature accepts a CRGB / uint32_t. We can blend between two CRGB
-  // representations of these temperatures.
+  // 0 = CarbonArc (Cold/Blueish) or OvercastSky
+  // 100 = Candle (Very Warm/Orange)
 
   CRGB colorCold = OvercastSky;
-  CRGB colorWarm = Tungsten40W;
+  CRGB colorWarm = Candle; // Changed to Candle for more warmth per user request
 
   CRGB mixed = blend(colorCold, colorWarm, map(warmthValue, 0, 100, 0, 255));
   FastLED.setTemperature(mixed);
@@ -130,7 +181,7 @@ void loop() {
 
   applyTemperature(); // Constantly update temp in case it changed
 
-  float rot = (millis() % ROTATION_TIME) / (float)ROTATION_TIME;
+  float rot = (millis() % rotationTime) / (float)rotationTime;
 
   FastLED.clear();
 
@@ -148,7 +199,7 @@ void loop() {
         focusPos -= 1.0;
 
       float d = circDist(ledPos, focusPos);
-      lightSum += gaussian(d, FOCUS_WIDTH);
+      lightSum += gaussian(d, focusWidth);
     }
 
     // shadow focus
@@ -156,20 +207,20 @@ void loop() {
     if (shadowPos >= 1.0)
       shadowPos -= 1.0;
 
-    shadowVal = gaussian(circDist(ledPos, shadowPos), FOCUS_WIDTH * 1.3);
+    shadowVal = gaussian(circDist(ledPos, shadowPos), focusWidth * 1.3);
 
     float brightness;
 
-    if (!LIGHT_MODE) {
+    if (!lightMode) {
       // ===== ROTATING SHADOW =====
       brightness =
-          BASE_BRIGHTNESS + lightSum * LIGHT_PEAK - shadowVal * SHADOW_DEPTH;
+          baseBrightness + lightSum * lightPeak - shadowVal * shadowDepth;
 
     } else {
       // ===== REAL ROTATING LIGHT =====
 
       // main beam (only one)
-      float mainBeam = gaussian(circDist(ledPos, rot), FOCUS_WIDTH * 0.7);
+      float mainBeam = gaussian(circDist(ledPos, rot), focusWidth * 0.7);
 
       // secondary focuses (very soft)
       float secondary = lightSum * 0.25;
