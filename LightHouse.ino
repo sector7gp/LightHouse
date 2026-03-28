@@ -2,6 +2,7 @@
 #include <FastLED.h>
 #include <WebServer.h>
 #include <WiFiManager.h>
+#include <ArduinoOTA.h>
 
 #define LED_PIN 2
 #define NUM_LEDS 12
@@ -43,83 +44,118 @@ input[type=checkbox] { transform: scale(1.5); }
   <h3>Lighthouse</h3>
 
   <div class="control-row">
-    <p class="label">Warmth</p>
-    <div class="slider-container"><input type="range" min="0" max="100" value="%WARMTH%" class="slider" oninput="update('warmth', this.value)"></div>
-    <p class="val" id="warmth_val">%WARMTH%</p>
+    <p class="label">Calidez</p>
+    <div class="slider-container"><input type="range" min="0" max="100" id="warmth" class="slider" oninput="updateVal('warmth', this.value)"></div>
+    <p class="val" id="warmth_val">0</p>
   </div>
 
   <div class="control-row">
-    <p class="label">Time (s)</p>
-    <div class="slider-container"><input type="range" min="1000" max="10000" value="%ROT%" class="slider" oninput="update('rot', this.value)"></div>
-    <p class="val" id="rot_val">%ROT_DISP%</p>
+    <p class="label">Tiempo (s)</p>
+    <div class="slider-container"><input type="range" min="1000" max="10000" id="rot" class="slider" oninput="updateVal('rot', this.value)"></div>
+    <p class="val" id="rot_val">0</p>
   </div>
 
   <div class="control-row">
-    <p class="label">Bright</p>
-    <div class="slider-container"><input type="range" min="0" max="255" value="%BASE%" class="slider" oninput="update('base', this.value)"></div>
-    <p class="val" id="base_val">%BASE%</p>
+    <p class="label">Brillo</p>
+    <div class="slider-container"><input type="range" min="0" max="255" id="base" class="slider" oninput="updateVal('base', this.value)"></div>
+    <p class="val" id="base_val">0</p>
   </div>
 
   <div class="control-row">
     <p class="label">Peak</p>
-    <div class="slider-container"><input type="range" min="80" max="255" value="%PEAK%" class="slider" oninput="update('peak', this.value)"></div>
-    <p class="val" id="peak_val">%PEAK%</p>
+    <div class="slider-container"><input type="range" min="80" max="255" id="peak" class="slider" oninput="updateVal('peak', this.value)"></div>
+    <p class="val" id="peak_val">0</p>
   </div>
 
   <div class="control-row">
-    <p class="label">Shadow</p>
-    <div class="slider-container"><input type="range" min="100" max="235" value="%SHADOW%" class="slider" oninput="update('shadow', this.value)"></div>
-    <p class="val" id="shadow_val">%SHADOW%</p>
+    <p class="label">Sombra</p>
+    <div class="slider-container"><input type="range" min="100" max="235" id="shadow" class="slider" oninput="updateVal('shadow', this.value)"></div>
+    <p class="val" id="shadow_val">0</p>
   </div>
 
   <div class="control-row">
     <p class="label">Focus</p>
-    <div class="slider-container"><input type="range" min="6" max="25" value="%FOCUS%" class="slider" oninput="update('focus', this.value)"></div>
-    <p class="val" id="focus_val">%FOCUS_DISP%</p>
+    <div class="slider-container"><input type="range" min="6" max="25" id="focus" class="slider" oninput="updateVal('focus', this.value)"></div>
+    <p class="val" id="focus_val">0</p>
   </div>
 
   <div class="control-row" style="justify-content: center;">
     <label for="mode_box" style="margin-right: 10px;">Luz / Sombra</label>
-    <input type="checkbox" id="mode_box" onchange="update('mode', this.checked ? 1 : 0)" %CHECKED%>
+    <input type="checkbox" id="mode_box" onchange="updateMode(this.checked)">
   </div>
 
 <script>
-function update(name, val) {
-  if (name !== 'mode') {
-      if (name === 'focus') {
-          document.getElementById(name + "_val").innerHTML = (val / 100.0).toFixed(2);
-      } else if (name === 'rot') {
-          document.getElementById(name + "_val").innerHTML = (val / 1000.0).toFixed(1);
-      } else {
-          document.getElementById(name + "_val").innerHTML = val;
-      }
-  }
+let debounceTimer;
+
+function updateLabels() {
+  document.getElementById("warmth_val").innerText = document.getElementById("warmth").value;
+  document.getElementById("rot_val").innerText = (document.getElementById("rot").value / 1000.0).toFixed(1);
+  document.getElementById("base_val").innerText = document.getElementById("base").value;
+  document.getElementById("peak_val").innerText = document.getElementById("peak").value;
+  document.getElementById("shadow_val").innerText = document.getElementById("shadow").value;
+  document.getElementById("focus_val").innerText = (document.getElementById("focus").value / 100.0).toFixed(2);
+}
+
+function updateVal(name, val) {
+  // Update UI immediately
+  updateLabels();
+  
+  // Debounce the XHR request (100ms)
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/set?" + name + "=" + val, true);
+    xhr.send();
+  }, 100);
+}
+
+function updateMode(checked) {
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", "/set?" + name + "=" + val, true);
+  xhr.open("GET", "/set?mode=" + (checked ? 1 : 0), true);
   xhr.send();
 }
+
+// Fetch initial state when page loads
+window.onload = function() {
+  fetch('/state').then(r => r.json()).then(data => {
+    document.getElementById("warmth").value = data.warmth;
+    document.getElementById("rot").value = data.rot;
+    document.getElementById("base").value = data.base;
+    document.getElementById("peak").value = data.peak;
+    document.getElementById("shadow").value = data.shadow;
+    document.getElementById("focus").value = data.focus;
+    document.getElementById("mode_box").checked = (data.mode === 1);
+    updateLabels();
+  });
+};
 </script>
 </body></html>
 )rawliteral";
 
 void handleRoot() {
-  String page = htmlPage;
-  page.replace("%WARMTH%", String(warmthValue));
-  page.replace("%ROT%", String(rotationTime));
-  page.replace("%ROT_DISP%", String(rotationTime / 1000.0, 1));
-  page.replace("%BASE%", String(baseBrightness));
-  page.replace("%PEAK%", String(lightPeak));
-  page.replace("%SHADOW%", String(shadowDepth));
-  page.replace("%FOCUS%",
-               String((int)(focusWidth * 100))); // Display as integer 6-25
-  page.replace("%FOCUS_DISP%", String(focusWidth));
-  page.replace("%CHECKED%", lightMode ? "checked" : "");
-  server.send(200, "text/html", page);
+  server.send(200, "text/html", htmlPage);
 }
 
+void handleState() {
+  String json = "{";
+  json += "\"warmth\":" + String(warmthValue) + ",";
+  json += "\"rot\":" + String(rotationTime) + ",";
+  json += "\"base\":" + String(baseBrightness) + ",";
+  json += "\"peak\":" + String(lightPeak) + ",";
+  json += "\"shadow\":" + String(shadowDepth) + ",";
+  json += "\"focus\":" + String((int)(focusWidth * 100)) + ",";
+  json += "\"mode\":" + String(lightMode ? 1 : 0);
+  json += "}";
+  server.send(200, "application/json", json);
+}
+
+void applyTemperature();
+
 void handleSet() {
-  if (server.hasArg("warmth"))
+  if (server.hasArg("warmth")) {
     warmthValue = server.arg("warmth").toInt();
+    applyTemperature();
+  }
   if (server.hasArg("rot"))
     rotationTime = server.arg("rot").toInt();
   if (server.hasArg("base"))
@@ -181,20 +217,26 @@ void setup() {
 
   // Web Server
   server.on("/", handleRoot);
+  server.on("/state", handleState);
   server.on("/set", handleSet);
   server.begin();
+
+  // OTA
+  ArduinoOTA.setHostname("faro");
+  ArduinoOTA.begin();
 }
 
 void loop() {
   server.handleClient();
+  ArduinoOTA.handle();
 
-  applyTemperature(); // Constantly update temp in case it changed
+  static unsigned long lastUpdate = 0;
+  if (millis() - lastUpdate >= 10) {
+    lastUpdate = millis();
 
-  float rot = (millis() % rotationTime) / (float)rotationTime;
+    float rot = (millis() % rotationTime) / (float)rotationTime;
 
-  FastLED.clear();
-
-  for (uint8_t i = 0; i < NUM_LEDS; i++) {
+    for (uint8_t i = 0; i < NUM_LEDS; i++) {
 
     float ledPos = i / (float)NUM_LEDS;
 
@@ -245,6 +287,6 @@ void loop() {
     leds[i] = CRGB(brightness, brightness, brightness);
   }
 
-  FastLED.show();
-  delay(10);
+    FastLED.show();
+  }
 }
