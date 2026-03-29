@@ -1,5 +1,19 @@
 # CHANGELOG - LightHouse Project
 
+## [1.2.0] - 2026-03-29
+
+### ✨ Nuevas Funcionalidades
+- **Calendario Semanal (Scheduler):** Se implementó un sistema de encendido/apagado programado por días y horas.
+- **Soporte NTP:** El dispositivo ahora sincroniza la hora automáticamente a través de internet (pool.ntp.org) para el funcionamiento del calendario.
+- **Master Power Toggle:** Se añadió un interruptor general de encendido/apagado en la web.
+- **Interfaz "Dark Mode" Premium:** Nueva estética visual oscura con tarjetas y sombras dinámicas.
+- **Chips de Día:** Selección visual intuitiva de los días de la semana (L M X J V S D).
+
+### 🚀 Mejoras Técnicas
+- **Bitmask de Días:** Optimización de memoria usando una máscara de bits para los días de la semana.
+- **Lógica de Medianoche:** El scheduler soporta rangos horarios que cruzan la medianoche (ej: 22h a 06h).
+- **Persistencia mejorada:** El estado del scheduler ahora forma parte integral de la API `/state`.
+
 ## [1.1.0] - 2026-03-28
 
 ### ✨ Nuevas Funcionalidades
