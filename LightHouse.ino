@@ -89,13 +89,14 @@ input:checked + .slider-toggle:before { transform: translateX(24px); }
       <div class="chip" id="day6" onclick="toggleDay(6)">D</div>
     </div>
 
-    <div class="time-container">
+    <div class="control-row" style="background: transparent; margin-bottom: 5px;">
+      <span style="color: #888; margin-right: 5px;">desde</span>
       <input type="time" id="time_start" onchange="updateTime('start', this.value)">
-      <span style="color: #888;">hasta</span>
+      <span style="color: #888; margin: 0 10px;">hasta</span>
       <input type="time" id="time_end" onchange="updateTime('end', this.value)">
     </div>
     <div class="control-row" style="background: transparent; margin-top: 10px;">
-      <span style="font-size: 0.9rem; color: #f39c12;">Modo Luz / Sombra</span>
+      <span style="font-size: 0.9rem; color: #f39c12; font-weight: bold;">MODO LUZ / SOMBRA</span>
       <label class="switch">
         <input type="checkbox" id="mode_toggle" onchange="updateMode(this.checked)">
         <span class="slider-toggle"></span>
