@@ -94,6 +94,13 @@ input:checked + .slider-toggle:before { transform: translateX(24px); }
       <span style="color: #888;">hasta</span>
       <input type="time" id="time_end" onchange="updateTime('end', this.value)">
     </div>
+    <div class="control-row" style="background: transparent; margin-top: 10px;">
+      <span style="font-size: 0.9rem; color: #888;">Modo Luz / Sombra</span>
+      <label class="switch">
+        <input type="checkbox" id="mode_toggle" onchange="updateMode(this.checked)">
+        <span class="slider-toggle"></span>
+      </label>
+    </div>
   </div>
 
   <div class="card">
@@ -102,35 +109,38 @@ input:checked + .slider-toggle:before { transform: translateX(24px); }
       <div class="slider-container"><input type="range" min="0" max="100" id="warmth" class="slider" oninput="updateLabels()"></div>
       <p class="val" id="warmth_val">0</p>
     </div>
-    <!-- ... Rest of sliders ... -->
+
     <div class="control-row">
       <p class="label">Tiempo (s)</p>
       <div class="slider-container"><input type="range" min="1000" max="10000" id="rot" class="slider" oninput="updateLabels()"></div>
       <p class="val" id="rot_val">0</p>
     </div>
-    <div class="control-row">
-      <p class="label">Brillo</p>
-      <div class="slider-container"><input type="range" min="0" max="255" id="base" class="slider" oninput="updateLabels()"></div>
-      <p class="val" id="base_val">0</p>
-    </div>
-    <div class="control-row">
-      <p class="label">Peak</p>
-      <div class="slider-container"><input type="range" min="80" max="255" id="peak" class="slider" oninput="updateLabels()"></div>
-      <p class="val" id="peak_val">0</p>
-    </div>
-    <div class="control-row">
-      <p class="label">Sombra</p>
-      <div class="slider-container"><input type="range" min="100" max="235" id="shadow" class="slider" oninput="updateLabels()"></div>
-      <p class="val" id="shadow_val">0</p>
-    </div>
-    <div class="control-row">
-      <p class="label">Focus</p>
-      <div class="slider-container"><input type="range" min="6" max="25" id="focus" class="slider" oninput="updateLabels()"></div>
-      <p class="val" id="focus_val">0</p>
-    </div>
-    <div class="control-row" style="justify-content: center; background: transparent;">
-      <label for="mode_box" style="margin-right: 10px; font-size: 0.9rem; color: #888;">Modo Luz / Sombra</label>
-      <input type="checkbox" id="mode_box" onchange="updateMode(this.checked)">
+
+    <!-- Shadow mode only parameters -->
+    <div id="shadow_group">
+      <div class="control-row">
+        <p class="label">Brillo</p>
+        <div class="slider-container"><input type="range" min="0" max="255" id="base" class="slider" oninput="updateLabels()"></div>
+        <p class="val" id="base_val">0</p>
+      </div>
+
+      <div class="control-row">
+        <p class="label">Peak</p>
+        <div class="slider-container"><input type="range" min="80" max="255" id="peak" class="slider" oninput="updateLabels()"></div>
+        <p class="val" id="peak_val">0</p>
+      </div>
+
+      <div class="control-row">
+        <p class="label">Sombra</p>
+        <div class="slider-container"><input type="range" min="100" max="235" id="shadow" class="slider" oninput="updateLabels()"></div>
+        <p class="val" id="shadow_val">0</p>
+      </div>
+
+      <div class="control-row">
+        <p class="label">Focus</p>
+        <div class="slider-container"><input type="range" min="6" max="25" id="focus" class="slider" oninput="updateLabels()"></div>
+        <p class="val" id="focus_val">0</p>
+      </div>
     </div>
   </div>
 
@@ -145,6 +155,9 @@ function updateLabels() {
   document.getElementById("peak_val").innerText = document.getElementById("peak").value;
   document.getElementById("shadow_val").innerText = document.getElementById("shadow").value;
   document.getElementById("focus_val").innerText = (document.getElementById("focus").value / 100.0).toFixed(2);
+  
+  const isSombra = document.getElementById("mode_toggle").checked;
+  document.getElementById("shadow_group").style.display = isSombra ? "none" : "block";
   
   // Debounce generic slider updates
   const activeSlider = document.activeElement;
@@ -186,6 +199,7 @@ function updateTime(type, val) {
 
 function updateMode(checked) {
   sendVal('mode', checked ? 1 : 0);
+  updateLabels();
 }
 
 window.onload = function() {
@@ -197,7 +211,7 @@ window.onload = function() {
     document.getElementById("peak").value = data.peak;
     document.getElementById("shadow").value = data.shadow;
     document.getElementById("focus").value = data.focus;
-    document.getElementById("mode_box").checked = (data.mode === 1);
+    document.getElementById("mode_toggle").checked = (data.mode === 1);
     
     currentDays = data.days;
     updateChipsUI();
