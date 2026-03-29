@@ -95,7 +95,7 @@ input:checked + .slider-toggle:before { transform: translateX(24px); }
       <input type="time" id="time_end" onchange="updateTime('end', this.value)">
     </div>
     <div class="control-row" style="background: transparent; margin-top: 10px;">
-      <span style="font-size: 0.9rem; color: #888;">Modo Luz / Sombra</span>
+      <span style="font-size: 0.9rem; color: #f39c12;">Modo Luz / Sombra</span>
       <label class="switch">
         <input type="checkbox" id="mode_toggle" onchange="updateMode(this.checked)">
         <span class="slider-toggle"></span>
