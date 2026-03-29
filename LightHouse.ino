@@ -351,6 +351,7 @@ void setup() {
 
   // OTA
   ArduinoOTA.setHostname("faro");
+  ArduinoOTA.setPassword("1234");
   ArduinoOTA.begin();
 }
 
